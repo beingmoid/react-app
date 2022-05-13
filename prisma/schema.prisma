@@ -1,0 +1,27 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "postgresql"
+  url      = "postgres://wqyjyjaalztdwd:2cc16a13dcd31cc35ce5b4789093bafddd666791f9108a544f1e8039287da671@ec2-3-224-164-189.compute-1.amazonaws.com:5432/d3g5nalm9lufor"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Feedback {
+  id           String       @id @default(uuid())
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  feedbackType FeedbackType
+  message      String
+  email        String
+  name         String
+}
+
+enum FeedbackType {
+  ISSUE
+  IDEA
+  FEEDBACK
+}
