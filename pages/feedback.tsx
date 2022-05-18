@@ -2,8 +2,19 @@ import Head from 'next/head';
 import { prisma } from 'lib/prisma';
 import { Feedback, FeedbackType } from '.prisma/client';
 import Link from 'next/link';
+import { useTable } from 'react-table'
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  QueryClient,
+  QueryClientProvider,
+} from 'react-query'
 
 export default function FeedbackPage({ feedback }) {
+
+
+
   const formatFeedbackType = (feedback: FeedbackType) => {
     switch (feedback) {
       case 'FEEDBACK':
@@ -14,7 +25,41 @@ export default function FeedbackPage({ feedback }) {
         return 'bg-red-400 text-red-800';
     }
   };
+ 
+  const queryClient = new QueryClient();
+    // Access the client
+ 
+    // Queries
+    const query = useQuery('feedback',getServerSideProps)
+  
+    const columns =[{
+      Header: 'Name',
+      accessor: 'name', // accessor is the "key" in the data
+    },
+    {
+      Header: 'Email',
+      accessor: 'email',
+    },
+    {
+      Header: 'Message',
+      accessor: 'message',
+    },
+    {
+      Header: 'Feedback type',
+      accessor: 'feedbackType',
+    },
+  ];
+  const {
+    getTableProps,
+    getTableBodyProps,
+    headerGroups,
+    rows,
+    prepareRow,
+  } = useTable({ columns, query })
+  
+  
   return (
+    <QueryClientProvider client={queryClient}>
     <div>
       <Head>
         <title>Feedback App</title>
@@ -32,59 +77,51 @@ export default function FeedbackPage({ feedback }) {
                 <div className="shadow overflow-hidden border-b border-gray-800 rounded-lg">
                   <table className="min-w-full divide-y divide-gray-800 ">
                     <thead className="bg-gray-800">
-                      <tr>
-                        <th
-                          scope="col"
-                          className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider"
-                        >
-                          Name
-                        </th>
-                        <th
-                          scope="col"
-                          className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider"
-                        >
-                          Email
-                        </th>
-                        <th
-                          scope="col"
-                          className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider"
-                        >
-                          Message
-                        </th>
-                        <th
-                          scope="col"
-                          className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider"
-                        >
-                          Feedback Type
-                        </th>
-                      </tr>
+                    {headerGroups.map(headerGroup => (
+           <tr {...headerGroup.getHeaderGroupProps()}>
+             {headerGroup.headers.map(column => (
+               <th
+                 {...column.getHeaderProps()}
+                 style={{
+                   borderBottom: 'solid 3px red',
+                   background: 'aliceblue',
+                   color: 'black',
+                   fontWeight: 'bold',
+                 }}
+                 className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider"
+               >
+                 {column.render('Header')}
+               </th>
+             ))}
+           </tr>
+         ))}
+                     
                     </thead>
-                    <tbody className="bg-gray-700 divide-y divide-gray-500">
-                      {feedback.map((item: Feedback) => (
-                        <tr key={item.id}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
-                            {item.name}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
-                            <a href={`mailto:${item.email}`}>{item.email}</a>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-white truncate">
-                            <Link href={`/feedback/${item.id}`}>
-                              {item.message}
-                            </Link>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap capitalize">
-                            <span
-                              className={`flex-shrink-0 inline-block px-2 py-0.5 text-xs font-medium rounded-full ${formatFeedbackType(
-                                item.feedbackType
-                              )}`}
-                            >
-                              {item.feedbackType.toLowerCase()}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
+                    <tbody {...getTableBodyProps()}>
+         {rows.map(row => {
+           prepareRow(row)
+           return (
+             <tr {...row.getRowProps()}>
+               {row.cells.map(cell => {
+                 return (
+                   <td
+                     {...cell.getCellProps()}
+                     style={{
+                       padding: '10px',
+                       border: 'solid 1px gray',
+                       background: 'papayawhip',
+                     }}
+                     className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white"
+                   >
+                     {cell.render('Cell')}
+                   </td>
+                 )
+               })}
+             </tr>
+           )
+         })}
+       </tbody>
+                 
                   </table>
                 </div>
               </div>
@@ -93,6 +130,7 @@ export default function FeedbackPage({ feedback }) {
         </div>
       </main>
     </div>
+    </QueryClientProvider>
   );
 }
 
